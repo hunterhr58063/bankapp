@@ -15,16 +15,14 @@ import { authFormSchema } from '@/lib//utils'
 import CustomInput from './CustomInput'
 import { useRouter } from 'next/navigation'
 import { getLoggedInUser, signIn, signUp } from '@/lib/actions/user.actions'
+import PlaidLink from './PlaidLink'
 
 
 const AuthForm = ({ type }: { type: string }) => {
     const router = useRouter()
     const [user, setUser] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
-
-
     const formSchema = authFormSchema(type)
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -41,19 +39,32 @@ const AuthForm = ({ type }: { type: string }) => {
         try {
             //sign up with App write & create plaid token
 
+
             if (type === 'sign-up') {
-                const newUser = await signUp(data);
+                const userData = {
+                    firstName: data.firstName!,
+                    lastName: data.lastName!,
+                    address1: data.address1!,
+                    city: data.city!,
+                    state: data.state!,
+                    postalCode: data.postalCode!,
+                    dateOfBirth: data.dateOfBirth!,
+                    ssn: data.ssn!,
+                    email: data.email,
+                    password: data.password
+                }
+                const newUser = await signUp(userData);
                 setUser(newUser)
             }
             if (type === 'sign-in') {
+
                 const response = await signIn({
                     email: data.email,
                     password: data.password
                 })
+                console.log(response, "response")
                 if (response) router.push('/')
             }
-
-
         }
         catch (error) {
             console.log(error)
@@ -84,7 +95,7 @@ const AuthForm = ({ type }: { type: string }) => {
             </header>
             {user ? (
                 <div className="flex flex-col gap-4">
-                    {/* PlaidLink */}
+                    <PlaidLink user={user} variant="primary" />
                 </div>
             ) : (
                 <>
@@ -112,8 +123,8 @@ const AuthForm = ({ type }: { type: string }) => {
 
                                 </>
                             )}
-                            <CustomInput control={form.control} label='Email' name='email' placeholder='Enter Your Email' />
-                            <CustomInput control={form.control} label='Password' name='password' placeholder='Enter Your Password' />
+                            <CustomInput key={"Email"} control={form.control} label='Email' name='email' placeholder='Enter Your Email' />
+                            <CustomInput key={"password"} control={form.control} label='Password' name='password' placeholder='Enter Your Password' />
                             <div className="flex flex-col gap-4">
                                 <Button type="submit" className='form-btn' disabled={isLoading}>
                                     {isLoading ? (
